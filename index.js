@@ -28,27 +28,6 @@ void transformer_callback_base(GumStalkerIterator *iterator,
         gchar *line = g_strdup_printf("\\t0x%llx %s %s", insn->address, insn->mnemonic,
                                       insn->op_str);
         send(line);
-        cs_arm64_op *ops = insn->detail->arm64.operands;
-        for (int i = 0; i < insn->detail->arm64.op_count; ++i) {
-            switch (ops[i].type) {
-                case ARM64_OP_REG:
-                    if (insn->detail->arm64.operands[i].access & CS_AC_READ) {
-                        send("CS_AC_READ");
-                    }
-                    if (insn->detail->arm64.operands[i].access & CS_AC_WRITE) {
-                        send("CS_AC_WRITE");
-                    }
-                    break;
-                case ARM64_OP_MEM:
-                    send("ARM64_OP_MEM");
-                    if (insn->detail->arm64.operands[i].mem.index) {
-                        send("index");
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
         gum_stalker_iterator_keep(iterator);
     }
     send("");
@@ -361,7 +340,7 @@ function hook_dlopen(so_name) {
                             // 开始stalker
                             Stalker.follow(curTid, {
                                 // 直接创建block块，什么都不做
-                                transform: stalker_module.transformer_callback_trace
+                                transform: stalker_module.transformer_callback_base
                             })
                         },
                         onLeave: function (retval) {
